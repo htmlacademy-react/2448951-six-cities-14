@@ -4,9 +4,10 @@ import {useAppSelector} from '../../hooks/use-app-selector';
 import Header from '../../components/header/header';
 import {Offer} from '../../types/offer';
 import {Link} from 'react-router-dom';
+import {getOffers} from '../../store/offers-data/selectors';
 
 function FavoritesScreen(): JSX.Element {
-  const offers = useAppSelector((state) => state.offers);
+  const offers = useAppSelector(getOffers);
   const favoriteOffers:Offer[] = offers.filter((offer) => offer.isFavorite);
 
   return (
@@ -18,6 +19,7 @@ function FavoritesScreen(): JSX.Element {
       <div className="page">
         <Header nav />
         <main className="page__main page__main--favorites">
+          <div className="visually-hidden">FavoritesScreen</div>
           <div className="page__favorites-container container">
 
             {favoriteOffers.length !== 0 &&

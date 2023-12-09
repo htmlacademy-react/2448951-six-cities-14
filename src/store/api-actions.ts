@@ -6,32 +6,27 @@ import {Offer} from '../types/offer';
 import {OfferItem} from '../types/offer-item';
 import {AuthData} from '../types/auth-data';
 import {UserData} from '../types/user-data';
-import {
-  setOffers,
-  setOffersDataLoadingStatus,
-  setFavoriteOffers,
-  setFavoriteOffersDataLoadingStatus,
-  requireAuthorization,
-  redirectToRoute,
-  setUserData
-} from './action';
+import {redirectToRoute} from './action';
+
+import {setUserData, setAuthorizationStatus} from './user-data/user-data';
+import {setFavoriteOffers} from './favorites-data/favorites-data';
+import {setOffers} from './offers-data/offers-data';
+
 import {APIRoute, AuthorizationStatus, AppRoute} from '../const';
 import {saveToken, dropToken} from '../services/token';
 import {useUpdateOffers} from '../hooks/use-update-offers';
 import {ValidationError} from '../types/index';
 import {toast} from 'react-toastify';
 
-export const fetchOffersAction = createAsyncThunk<void, undefined, {
+export const fetchOffersAction = createAsyncThunk<Offer[], undefined, {
   dispatch: AppDispatch;
   state: State;
   extra: AxiosInstance;
 }>(
-  'data/fetchOffers',
-  async (_arg, {dispatch, extra: api}) => {
-    dispatch(setOffersDataLoadingStatus(true));
+  'offers/fetch',
+  async (_arg, {extra: api}) => {
     const {data} = await api.get<Offer[]>(APIRoute.Offers);
-    dispatch(setOffersDataLoadingStatus(false));
-    dispatch(setOffers(data));
+    return data;
   },
 );
 
@@ -40,26 +35,23 @@ export const updateOffersAction = createAsyncThunk<void, OfferItem, {
   state: State;
   extra: AxiosInstance;
 }>(
-  'data/updateOffers',
+  'offers/update',
   (offerItem, {dispatch, getState}) => {
-    const offers = getState()['offers'];
+    const offers = getState()['OFFERS']['offers'];
     const newOfferList = useUpdateOffers(offers, offerItem);
     dispatch(setOffers(newOfferList));
   }
 );
 
-
-export const fetchFavoriteOffersAction = createAsyncThunk<void, undefined, {
+export const fetchFavoriteOffersAction = createAsyncThunk<Offer[], undefined, {
   dispatch: AppDispatch;
   state: State;
   extra: AxiosInstance;
 }>(
-  'data/fetchOffers',
-  async (_arg, {dispatch, extra: api}) => {
-    dispatch(setFavoriteOffersDataLoadingStatus(true));
+  'favorite/fetch',
+  async (_arg, {extra: api}) => {
     const {data} = await api.get<Offer[]>(APIRoute.Favorite);
-    dispatch(setFavoriteOffersDataLoadingStatus(false));
-    dispatch(setFavoriteOffers(data));
+    return data;
   },
 );
 
@@ -73,10 +65,10 @@ export const checkAuthAction = createAsyncThunk<void, undefined, {
     try {
       const {data} = await api.get<UserData>(APIRoute.Login);
       dispatch(setUserData(data));
-      dispatch(requireAuthorization(AuthorizationStatus.Auth));
+      dispatch(setAuthorizationStatus(AuthorizationStatus.Auth));
       dispatch(fetchFavoriteOffersAction());
     } catch {
-      dispatch(requireAuthorization(AuthorizationStatus.NoAuth));
+      dispatch(setAuthorizationStatus(AuthorizationStatus.NoAuth));
       dispatch(setFavoriteOffers([]));
     }
   },
@@ -95,11 +87,12 @@ export const loginAction = createAsyncThunk<void, AuthData, {
       const userData = data;
       saveToken(token);
       dispatch(setUserData(userData));
-      dispatch(requireAuthorization(AuthorizationStatus.Auth));
+      dispatch(setAuthorizationStatus(AuthorizationStatus.Auth));
       dispatch(fetchOffersAction());
       dispatch(fetchFavoriteOffersAction());
       dispatch(redirectToRoute(AppRoute.Main));
     } catch (error: unknown) {
+      dispatch(setAuthorizationStatus(AuthorizationStatus.NoAuth));
       if (axios.isAxiosError<ValidationError, Record<string, unknown>>(error) && error.code !== 'ERR_CANCELED') {
         const errorText: string | undefined = error.response?.data?.message;
         if (errorText) {
@@ -120,9 +113,11 @@ export const logoutAction = createAsyncThunk<void, undefined, {
     await api.delete(APIRoute.Logout);
     dropToken();
     dispatch(setUserData(null));
-    dispatch(requireAuthorization(AuthorizationStatus.NoAuth));
+    dispatch(setAuthorizationStatus(AuthorizationStatus.NoAuth));
     dispatch(fetchOffersAction());
     dispatch(setFavoriteOffers([]));
     dispatch(redirectToRoute(AppRoute.Main));
   },
 );
+
+

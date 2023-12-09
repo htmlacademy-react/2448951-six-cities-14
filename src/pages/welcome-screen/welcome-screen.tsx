@@ -13,14 +13,19 @@ import SortingForm from '../../components/sorting-form/sorting-form';
 import {useFilteredOffers} from '../../hooks/use-filtered-offers';
 import {SORTING_DEFAULT_OPTION} from '../../const';
 import classNames from 'classnames';
+import Spinner from '../../components/spinner/spinner';
+import {getIsOffersDataLoading, getOffers} from '../../store/offers-data/selectors';
+import {getActiveCityName} from '../../store/city-data/selectors';
 
 
 function WelcomeScreen(): JSX.Element {
-  const offers = useAppSelector((state) => state.offers);
-  const activeCityName: CityName = useAppSelector((state) => state.activeCityName);
+  const isOffersDataLoading = useAppSelector(getIsOffersDataLoading);
+  const offers = useAppSelector(getOffers);
+  const activeCityName: CityName = useAppSelector(getActiveCityName);
   const [selectedPoint, setSelectedPoint] = useState<SelectedPoint>(null);
   const mapData = getMapData(offers, activeCityName);
   const [activeOptionValue, setActiveOptionValue] = useState<string>(SORTING_DEFAULT_OPTION);
+
   const filteredOffersData: Offer[] = useFilteredOffers(offers, activeCityName, activeOptionValue);
   const placesFound: number = filteredOffersData.length;
   const mainClasses = classNames(['page__main page__main--index', !placesFound && 'page__main--index-empty']);
@@ -51,11 +56,14 @@ function WelcomeScreen(): JSX.Element {
       <div className="page page--gray page--main">
         <Header nav />
         <main className={mainClasses}>
-          <h1 className="visually-hidden">Cities</h1>
+          <h1 className="visually-hidden">WelcomeScreen</h1>
 
           <Tabs />
 
-          {placesFound !== 0 &&
+          {isOffersDataLoading &&
+          <Spinner></Spinner>}
+
+          {!isOffersDataLoading && placesFound !== 0 &&
           <div className="cities">
             <div className="cities__places-container container">
               <section className="cities__places places">
@@ -77,13 +85,13 @@ function WelcomeScreen(): JSX.Element {
             </div>
           </div>}
 
-          {placesFound === 0 &&
+          {!isOffersDataLoading && placesFound === 0 &&
           <div className="cities">
             <div className="cities__places-container cities__places-container--empty container">
               <section className="cities__no-places">
                 <div className="cities__status-wrapper tabs__content">
                   <b className="cities__status">No places to stay available</b>
-                  <p className="cities__status-description">We could not find any property available at the moment in Dusseldorf</p>
+                  <p className="cities__status-description">We could not find any property available at the moment in {activeCityName}</p>
                 </div>
               </section>
               <div className="cities__right-section"></div>

@@ -19,9 +19,10 @@ import FavoriteButton from '../../components/favorite-button/favorite-button';
 import {useUpdateOffers} from '../../hooks/use-update-offers';
 import {getRating} from '../../utils/index';
 import {SelectedPoint} from '../../types/selected-point';
+import {getAuthorizationStatus} from '../../store/user-data/selectors';
 
 function OfferScreen(): JSX.Element {
-  const authorizationStatus = useAppSelector((state) => state.authorizationStatus);
+  const authorizationStatus = useAppSelector(getAuthorizationStatus);
   const updateOffers = useUpdateOffers;
   const navigate = useNavigate();
   const api = createAPI();
@@ -128,7 +129,7 @@ function OfferScreen(): JSX.Element {
                   <span className="offer__rating-value rating__value">{currentOfferItem.rating}</span>
                 </div>
                 <ul className="offer__features">
-                  <li className="offer__feature offer__feature--entire">
+                  <li className="offer__feature offer__feature--entire" style={{textTransform: 'capitalize'}}>
                     {currentOfferItem.type}
                   </li>
                   <li className="offer__feature offer__feature--bedrooms">
