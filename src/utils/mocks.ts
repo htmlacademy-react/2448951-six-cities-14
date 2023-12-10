@@ -6,6 +6,16 @@ import {User} from '../types/user';
 import {State } from '../types/state';
 import {UserData} from '../types/user-data';
 import {AuthorizationStatus, CITY_DEFAULT_NAME} from '../const';
+import { Action } from 'redux';
+import {createAPI} from '../services/api';
+import { ThunkDispatch } from 'redux-thunk';
+import {MapPoint} from '../types/map-point';
+import {MapData} from '../types/map-data';
+import {Review} from '../types/review';
+
+export type AppThunkDispatch = ThunkDispatch<State, ReturnType<typeof createAPI>, Action>;
+
+export const makeFakeOfferId = (): string => datatype.string(20);
 
 export const makeFakeUserData = (): UserData => ({
   avatarUrl: internet.avatar(),
@@ -71,3 +81,22 @@ export const makeFakeStore = (newStateData?: Partial<State>): State => ({
   },
   ...newStateData ?? {},
 });
+
+export const makeFakeMapPoint = (): MapPoint => ({
+  id: datatype.string(20),
+  latitude: datatype.number({ min: -90, max: 90, precision: 0.000001 }),
+  longitude: datatype.number({ min: -180, max: 180, precision: 0.000001 }),
+} as MapPoint);
+
+export const makeFakeMapData = (): MapData => ({
+  center: makeFakeLocation(),
+  points: [makeFakeMapPoint(), makeFakeMapPoint()],
+} as MapData);
+
+export const makeFakeReview = (): Review => ({
+  id: datatype.string(20),
+  date: datatype.string(10),
+  user: makeFakeUserData() as User,
+  comment: datatype.string(100),
+  rating: datatype.number({ min: 1, max: 5, precision: 0.1 }),
+} as Review);
